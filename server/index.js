@@ -22,15 +22,27 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// Database connection
-/*
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
-*/
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
-// For scaffolding verification without a real DB URI
-app.listen(PORT, () => console.log(`Server running on port ${PORT} (MongoDB disabled for scaffolding test)`));
+// Database connection
+async function startServer() {
+  try {
+    let mongoUri = process.env.MONGO_URI;
+    
+    // Use memory server if default placeholder is detected
+    if (mongoUri.includes('your_jwt_secret') || mongoUri.includes('mongodb+srv://user:password')) {
+      console.log('Detected placeholder MongoDB URI. Using mongodb-memory-server for testing...');
+      const mongoServer = await MongoMemoryServer.create();
+      mongoUri = mongoServer.getUri();
+    }
+
+    await mongoose.connect(mongoUri);
+    console.log('Connected to MongoDB');
+    
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+}
+
+startServer();
