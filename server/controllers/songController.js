@@ -19,3 +19,22 @@ exports.getSongs = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.searchSongs = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json([]);
+
+    const regex = new RegExp(q, 'i');
+    const songs = await Song.find({
+      $or: [
+        { title: regex },
+        { artist: regex }
+      ]
+    });
+    res.json(songs);
+  } catch (error) {
+    console.error('Error searching songs:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

@@ -1,11 +1,7 @@
 const express = require('express');
 const router = express.Router();
-// const playlistsController = require('../controllers/playlistsController');
-// const verifyJWT = require('../middleware/verifyJWT');
+const playlistController = require('../controllers/playlistController');
 
-// router.use(verifyJWT);
-// router.get('/', playlistsController.getUserPlaylists);
-// router.post('/', playlistsController.createPlaylist);
-// router.get('/:id', playlistsController.getPlaylist);
+router.post('/', playlistController.createPlaylist);
 
 module.exports = router;

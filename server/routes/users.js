@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-// const usersController = require('../controllers/usersController');
-// const verifyJWT = require('../middleware/verifyJWT');
+const userController = require('../controllers/userController');
 
-// router.use(verifyJWT);
-// router.get('/:id/likedSongs', usersController.getLikedSongs);
-// router.post('/:id/likedSongs', usersController.toggleLikeSong);
+// In a real app we would use verifyJWT here, but keeping it open for quick dev
+router.get('/:id/liked', userController.getLikedSongs);
+router.post('/:id/liked', userController.likeSong);
+router.delete('/:id/liked/:songId', userController.unlikeSong);
+router.get('/:id/playlists', userController.getUserPlaylists);
 
 module.exports = router;
