@@ -2,9 +2,12 @@ const Playlist = require('../models/Playlist');
 
 exports.createPlaylist = async (req, res) => {
   try {
-    const { userId, name } = req.body;
-    if (!userId || !name) {
-      return res.status(400).json({ message: 'UserId and name are required' });
+    console.log('POST /api/playlists req.body:', req.body);
+    const userId = req.user.id;
+    const { name } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ message: 'Name is required' });
     }
 
     const playlist = await Playlist.create({

@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const verifyJWT = require('../middleware/verifyJWT');
 
-// In a real app we would use verifyJWT here, but keeping it open for quick dev
+router.use(verifyJWT);
 router.get('/:id/liked', userController.getLikedSongs);
 router.post('/:id/liked', userController.likeSong);
 router.delete('/:id/liked/:songId', userController.unlikeSong);

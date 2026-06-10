@@ -4,10 +4,10 @@ const Song = require('../models/Song');
 
 exports.getLikedSongs = async (req, res) => {
   try {
-    const { id } = req.params;
-    const likedSongs = await LikedSong.find({ userId: id }).populate('songId');
+    const userId = req.user.id;
+    const likedSongs = await LikedSong.find({ user: userId }).populate('song');
     // Map to return just the songs array for the frontend
-    const songs = likedSongs.map(ls => ls.songId).filter(Boolean);
+    const songs = likedSongs.map(ls => ls.song).filter(Boolean);
     res.json(songs);
   } catch (error) {
     console.error('Error fetching liked songs:', error);
@@ -17,12 +17,12 @@ exports.getLikedSongs = async (req, res) => {
 
 exports.likeSong = async (req, res) => {
   try {
-    const { id } = req.params;
+    const userId = req.user.id;
     const { songId } = req.body;
     
-    const existing = await LikedSong.findOne({ userId: id, songId });
+    const existing = await LikedSong.findOne({ user: userId, song: songId });
     if (!existing) {
-      await LikedSong.create({ userId: id, songId });
+      await LikedSong.create({ user: userId, song: songId });
     }
     
     res.json({ message: 'Song liked successfully' });
@@ -34,8 +34,9 @@ exports.likeSong = async (req, res) => {
 
 exports.unlikeSong = async (req, res) => {
   try {
-    const { id, songId } = req.params;
-    await LikedSong.findOneAndDelete({ userId: id, songId });
+    const userId = req.user.id;
+    const { songId } = req.params;
+    await LikedSong.findOneAndDelete({ user: userId, song: songId });
     res.json({ message: 'Song unliked successfully' });
   } catch (error) {
     console.error('Error unliking song:', error);
@@ -45,8 +46,8 @@ exports.unlikeSong = async (req, res) => {
 
 exports.getUserPlaylists = async (req, res) => {
   try {
-    const { id } = req.params;
-    const playlists = await Playlist.find({ userId: id }).populate('songs');
+    const userId = req.user.id;
+    const playlists = await Playlist.find({ userId: userId }).populate('songs');
     res.json(playlists);
   } catch (error) {
     console.error('Error fetching playlists:', error);

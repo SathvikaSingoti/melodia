@@ -14,7 +14,7 @@ const verifyJWT = (req, res, next) => {
     process.env.JWT_SECRET,
     (err, decoded) => {
       if (err) return res.status(403).json({ message: 'Forbidden' });
-      req.userId = decoded.userId;
+      req.user = { id: decoded.userId };
       next();
     }
   );
