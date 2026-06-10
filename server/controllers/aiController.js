@@ -25,9 +25,9 @@ exports.generatePlaylist = async (req, res) => {
     const prompt = `Based on these liked songs: [${likedSongsInfo || 'User has no liked songs yet. Just recommend any good tracks'}], suggest 5 songs from this available catalog:\n[${catalogInfo}]\nReturn JSON array of song IDs only. Do not include any markdown, backticks, or explanation. Only return a raw valid JSON array of strings.`;
     
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // Explicitly using gemini-1.5-flash since 2.5 is hitting 503
+    // Explicitly using gemini-2.5-flash as requested
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: { responseMimeType: "application/json" }
     });
     
