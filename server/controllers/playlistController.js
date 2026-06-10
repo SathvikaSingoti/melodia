@@ -36,6 +36,26 @@ exports.getPlaylist = async (req, res) => {
   }
 };
 
+exports.updatePlaylist = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    
+    if (!name) return res.status(400).json({ message: 'Name is required' });
+    
+    const playlist = await Playlist.findByIdAndUpdate(
+      id,
+      { name },
+      { new: true }
+    ).populate('songs');
+    
+    res.json(playlist);
+  } catch (error) {
+    console.error('Error updating playlist:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.addSongToPlaylist = async (req, res) => {
   try {
     const { id } = req.params;
