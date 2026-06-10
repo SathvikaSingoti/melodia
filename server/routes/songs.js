@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
-// const songsController = require('../controllers/songsController');
-// const verifyJWT = require('../middleware/verifyJWT');
+const songController = require('../controllers/songController');
 
-// router.get('/', songsController.getAllSongs);
-// router.post('/', verifyJWT, songsController.uploadSong);
+router.get('/', songController.getSongs);
 
 module.exports = router;
