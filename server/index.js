@@ -16,6 +16,7 @@ app.use('/api/songs', require('./routes/songs'));
 app.use('/api/playlists', require('./routes/playlists'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/artists', require('./routes/artists'));
 
 // Health check
 app.get('/health', (req, res) => {
