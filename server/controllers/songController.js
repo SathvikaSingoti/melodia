@@ -6,7 +6,11 @@ exports.getSongs = async (req, res) => {
     const query = {};
 
     if (genre) {
-      query.genre = genre;
+      let searchGenre = genre;
+      if (genre.toLowerCase() === 'hip-hop') searchGenre = 'hiphop';
+      else if (genre.toLowerCase() === 'r&b') searchGenre = 'rnb';
+      
+      query.genre = new RegExp(searchGenre.replace(/[-& ]/g, '.*'), 'i');
     }
     if (mood) {
       query.mood = mood;
