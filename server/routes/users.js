@@ -11,5 +11,6 @@ router.get('/:id/playlists', userController.getUserPlaylists);
 router.put('/:id', userController.updateUser);
 router.get('/:id/history', userController.getHistory);
 router.post('/:id/history', userController.addHistory);
+router.get('/:id/stats', userController.getStats);
 
 module.exports = router;

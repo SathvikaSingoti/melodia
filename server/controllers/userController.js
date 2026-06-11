@@ -179,3 +179,153 @@ exports.addHistory = async (req, res) => {
     res.status(500).json({ message: 'Server error adding history' });
   }
 };
+
+exports.getStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    if (userId !== req.params.id) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const { period } = req.query; // week, month, all
+    
+    // 1. Calculate Streak (All-time)
+    const allHistory = await PlayHistory.find({ user: userId }).sort({ playedAt: -1 });
+    
+    let streak = 0;
+    if (allHistory.length > 0) {
+      const datesPlayed = new Set(
+        allHistory.map(h => {
+          const d = new Date(h.playedAt);
+          return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        })
+      );
+      
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+      
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = `${yesterday.getFullYear()}-${yesterday.getMonth()}-${yesterday.getDate()}`;
+      
+      let checkDate = datesPlayed.has(todayStr) ? today : (datesPlayed.has(yesterdayStr) ? yesterday : null);
+      
+      if (checkDate) {
+        let currentStreak = 0;
+        let d = new Date(checkDate);
+        while (true) {
+          const dStr = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+          if (datesPlayed.has(dStr)) {
+            currentStreak++;
+            d.setDate(d.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+        streak = currentStreak;
+      }
+    }
+
+    // 2. Filter by period
+    let startDate = new Date(0);
+    if (period === 'week') {
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === 'month') {
+      startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 1);
+    }
+
+    const periodHistory = await PlayHistory.find({
+      user: userId,
+      playedAt: { $gte: startDate }
+    }).populate('song');
+
+    const validHistory = periodHistory.filter(h => h.song != null);
+
+    let totalMinutes = 0;
+    const genreMap = {};
+    const artistMap = {};
+    const songMap = {};
+    const heatMapData = Array.from({ length: 7 }, () => Array(24).fill(0));
+
+    validHistory.forEach(h => {
+      const durationMins = (h.duration || h.song.duration) / 60;
+      totalMinutes += durationMins;
+
+      // Heatmap
+      const d = new Date(h.playedAt);
+      const day = d.getDay();
+      const hour = d.getHours();
+      heatMapData[day][hour]++;
+
+      // Genre
+      const genre = h.song.genre || 'Unknown';
+      if (!genreMap[genre]) genreMap[genre] = { count: 0, minutes: 0 };
+      genreMap[genre].count++;
+      genreMap[genre].minutes += durationMins;
+
+      // Artist
+      const artist = h.song.artist || 'Unknown';
+      if (!artistMap[artist]) artistMap[artist] = { count: 0, minutes: 0, artistId: h.song.artistId };
+      artistMap[artist].count++;
+      artistMap[artist].minutes += durationMins;
+
+      // Song
+      const songId = h.song._id.toString();
+      if (!songMap[songId]) songMap[songId] = { song: h.song, playCount: 0, totalMinutes: 0 };
+      songMap[songId].playCount++;
+      songMap[songId].totalMinutes += durationMins;
+    });
+
+    const genreBreakdown = Object.entries(genreMap)
+      .map(([genre, data]) => ({ genre, count: data.count, minutes: data.minutes }))
+      .sort((a, b) => b.minutes - a.minutes);
+
+    const topArtists = Object.entries(artistMap)
+      .map(([artist, data]) => ({ artist, artistId: data.artistId, count: data.count, minutes: data.minutes }))
+      .sort((a, b) => b.minutes - a.minutes)
+      .slice(0, 5);
+
+    const topSongs = Object.values(songMap)
+      .sort((a, b) => b.totalMinutes - a.totalMinutes)
+      .slice(0, 5);
+
+    const topGenre = genreBreakdown.length > 0 ? genreBreakdown[0].genre : "None";
+
+    // Format Heatmap
+    const formattedHeatmap = [];
+    let maxHourCount = -1;
+    let peakHourIndex = 0;
+    
+    for (let d = 0; d < 7; d++) {
+      for (let h = 0; h < 24; h++) {
+        formattedHeatmap.push({ day: d, hour: h, count: heatMapData[d][h] });
+        if (heatMapData[d][h] > maxHourCount) {
+          maxHourCount = heatMapData[d][h];
+          peakHourIndex = h;
+        }
+      }
+    }
+
+    const ampm = peakHourIndex >= 12 ? 'PM' : 'AM';
+    const hr12 = peakHourIndex % 12 || 12;
+    const peakHour = `${hr12} ${ampm}`;
+
+    res.json({
+      totalMinutes: Math.round(totalMinutes),
+      songsPlayed: validHistory.length,
+      topGenre,
+      streak,
+      genreBreakdown,
+      topArtists,
+      topSongs,
+      heatmap: formattedHeatmap,
+      peakHour
+    });
+
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ message: 'Server error fetching stats' });
+  }
+};
