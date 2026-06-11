@@ -7,22 +7,16 @@ exports.generatePlaylist = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // 1. Get user's liked songs
-    const likedSongsDoc = await LikedSong.find({ user: userId }).populate('song');
+    const userPrompt = req.body.prompt;
     
-    const likedSongsInfo = likedSongsDoc
-      .filter(doc => doc.song)
-      .map(doc => `"${doc.song.title}" by ${doc.song.artist} (${doc.song.genre})`)
-      .join(', ');
-      
-    // 2. Get available catalog
+    // 1. Get available catalog
     const allSongs = await Song.find({});
     const catalogInfo = allSongs
-      .map(song => `ID: ${song._id.toString()} | "${song.title}" by ${song.artist} (${song.genre})`)
+      .map(song => `ID: ${song._id.toString()} | "${song.title}" by ${song.artist} (${song.genre}, Mood: ${song.mood || 'unknown'})`)
       .join('\n');
       
-    // 3. Send to Gemini 2.5 Flash
-    const prompt = `Based on these liked songs: [${likedSongsInfo || 'User has no liked songs yet. Just recommend any good tracks'}], suggest 5 songs from this available catalog:\n[${catalogInfo}]\nReturn JSON array of song IDs only. Do not include any markdown, backticks, or explanation. Only return a raw valid JSON array of strings.`;
+    // 2. Send to Gemini 2.5 Flash
+    const prompt = `User wants: '${userPrompt}'. \nFrom this song catalog:\n[${catalogInfo}]\nPick the 6 most fitting songs. Return ONLY a JSON array of song IDs. Do not include any markdown, backticks, or explanation. Only return a raw valid JSON array of strings.`;
     
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     // Explicitly using gemini-2.5-flash as requested
@@ -44,8 +38,7 @@ exports.generatePlaylist = async (req, res) => {
     }
 
     // 4. Create new playlist
-    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const playlistName = `✨ AI Mix - ${dateStr}`;
+    const playlistName = userPrompt || `✨ AI Mix - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     
     const newPlaylist = await Playlist.create({
       userId,
