@@ -19,6 +19,10 @@ const songSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  albumId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Album'
+  },
   genre: {
     type: String,
     trim: true,
@@ -39,6 +43,10 @@ const songSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  plays: {
+    type: Number,
+    default: 0
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Song', songSchema);

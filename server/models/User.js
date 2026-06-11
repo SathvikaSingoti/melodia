@@ -21,6 +21,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  avatarUrl: {
+    type: String,
+    required: false,
+  },
+  onboardingCompleted: {
+    type: Boolean,
+    default: false,
+  },
+  favoriteGenres: {
+    type: [String],
+    default: [],
+  },
+  favoriteArtists: {
+    type: [String],
+    default: [],
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

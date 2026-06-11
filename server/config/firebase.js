@@ -16,7 +16,7 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     if (serviceAccount) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        // storageBucket: "your-app.appspot.com" // You can set this later
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "your-app.appspot.com"
       });
       console.log('Firebase Admin SDK initialized successfully.');
       isInitialized = true;

@@ -26,7 +26,7 @@ router.post('/signup', async (req, res) => {
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(409).json({ message: 'Account already exists. Login instead?' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -46,8 +46,14 @@ router.post('/signup', async (req, res) => {
       token,
       user: {
         id: newUser._id,
+        _id: newUser._id,
         username: newUser.username,
         email: newUser.email,
+        onboardingCompleted: newUser.onboardingCompleted,
+        avatarUrl: newUser.avatarUrl,
+        favoriteGenres: newUser.favoriteGenres,
+        favoriteArtists: newUser.favoriteArtists,
+        createdAt: newUser.createdAt,
       }
     });
   } catch (error) {
@@ -67,7 +73,7 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(404).json({ message: 'No account found. Sign up instead?' });
     }
 
     if (!user.passwordHash) {
@@ -85,8 +91,14 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
+        onboardingCompleted: user.onboardingCompleted,
+        avatarUrl: user.avatarUrl,
+        favoriteGenres: user.favoriteGenres,
+        favoriteArtists: user.favoriteArtists,
+        createdAt: user.createdAt,
       }
     });
   } catch (error) {
