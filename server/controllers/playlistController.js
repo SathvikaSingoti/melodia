@@ -4,7 +4,7 @@ exports.createPlaylist = async (req, res) => {
   try {
     console.log('POST /api/playlists req.body:', req.body);
     const userId = req.user.id;
-    const { name } = req.body;
+    const { name, songs, coverUrl } = req.body;
     
     if (!name) {
       return res.status(400).json({ message: 'Name is required' });
@@ -13,8 +13,8 @@ exports.createPlaylist = async (req, res) => {
     const playlist = await Playlist.create({
       userId,
       name,
-      songs: [],
-      coverUrl: ''
+      songs: songs || [],
+      coverUrl: coverUrl || ''
     });
 
     res.status(201).json(playlist);
