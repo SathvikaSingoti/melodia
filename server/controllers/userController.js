@@ -3,6 +3,7 @@ const Playlist = require('../models/Playlist');
 const Song = require('../models/Song');
 const User = require('../models/User');
 const PlayHistory = require('../models/PlayHistory');
+const Artist = require('../models/Artist');
 const admin = require('../config/firebase');
 const { getStorage } = require('firebase-admin/storage');
 const { getApps } = require('firebase-admin/app');
@@ -124,14 +125,14 @@ exports.getHistory = async (req, res) => {
 
     const count = await PlayHistory.countDocuments({ user: userId });
     
-    // Seed data if no history exists
-    if (count === 0) {
-      const randomSongs = await Song.aggregate([{ $sample: { size: 50 } }]);
+    // Seed data if little history exists
+    if (count < 100) {
+      const randomSongs = await Song.aggregate([{ $sample: { size: 100 } }]);
       if (randomSongs.length > 0) {
         const now = Date.now();
         const histories = randomSongs.map(song => {
-          // random time in the last 7 days
-          const randomOffset = Math.random() * 7 * 24 * 60 * 60 * 1000;
+          // random time in the last 30 days
+          const randomOffset = Math.random() * 30 * 24 * 60 * 60 * 1000;
           return {
             user: userId,
             song: song._id,
@@ -327,5 +328,19 @@ exports.getStats = async (req, res) => {
   } catch (error) {
     console.error('Error fetching stats:', error);
     res.status(500).json({ message: 'Server error fetching stats' });
+  }
+};
+
+exports.getFollowing = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    if (userId !== req.params.id) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    const artists = await Artist.find({ followers: userId });
+    res.json(artists);
+  } catch (error) {
+    console.error('Error fetching following:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
