@@ -13,5 +13,6 @@ router.get('/:id/history', userController.getHistory);
 router.post('/:id/history', userController.addHistory);
 router.get('/:id/following', userController.getFollowing);
 router.get('/:id/stats', userController.getStats);
+router.delete('/:id', userController.deleteUser);
 
 module.exports = router;

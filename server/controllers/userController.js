@@ -344,3 +344,25 @@ exports.getFollowing = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    if (userId !== req.params.id) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    // Delete related documents
+    await LikedSong.deleteMany({ user: userId });
+    await Playlist.deleteMany({ userId: userId });
+    await PlayHistory.deleteMany({ user: userId });
+    
+    // Delete user document
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user account:', error);
+    res.status(500).json({ message: 'Server error deleting account' });
+  }
+};
