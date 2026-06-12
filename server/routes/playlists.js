@@ -5,6 +5,7 @@ const verifyJWT = require('../middleware/verifyJWT');
 
 router.use(verifyJWT);
 router.post('/', playlistController.createPlaylist);
+router.get('/', playlistController.getAllPlaylists);
 router.get('/:id', playlistController.getPlaylist);
 router.put('/:id', playlistController.updatePlaylist);
 router.post('/:id/songs', playlistController.addSongToPlaylist);

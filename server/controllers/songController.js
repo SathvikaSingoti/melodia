@@ -31,12 +31,26 @@ exports.searchSongs = async (req, res) => {
 
     const escapedQ = q.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
     const regex = new RegExp(escapedQ, 'i');
-    const songs = await Song.find({
-      $or: [
-        { title: regex },
-        { artist: regex }
-      ]
-    });
+    
+    let queryObj = {};
+    if (req.query.filter === 'genre') {
+      queryObj = { genre: regex };
+    } else if (req.query.filter === 'artist') {
+      queryObj = { artist: regex };
+    } else if (req.query.filter === 'duration') {
+      if (q === 'short') queryObj = { duration: { $lt: 120 } };
+      else if (q === 'medium') queryObj = { duration: { $gte: 120, $lte: 240 } };
+      else if (q === 'long') queryObj = { duration: { $gt: 240 } };
+    } else {
+      queryObj = {
+        $or: [
+          { title: regex },
+          { artist: regex }
+        ]
+      };
+    }
+
+    const songs = await Song.find(queryObj);
     res.json(songs);
   } catch (error) {
     console.error('Error searching songs:', error);

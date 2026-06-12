@@ -24,6 +24,24 @@ exports.createPlaylist = async (req, res) => {
   }
 };
 
+exports.getAllPlaylists = async (req, res) => {
+  try {
+    const { aiGenerated, limit, userId } = req.query;
+    const query = {};
+    if (aiGenerated) query.isAIGenerated = aiGenerated === 'true';
+    if (userId) query.userId = userId;
+    
+    let playlistsQuery = Playlist.find(query).sort({ createdAt: -1 });
+    if (limit) playlistsQuery = playlistsQuery.limit(parseInt(limit));
+    
+    const playlists = await playlistsQuery.populate('songs');
+    res.json(playlists);
+  } catch (error) {
+    console.error('Error fetching playlists:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.getPlaylist = async (req, res) => {
   try {
     const { id } = req.params;
