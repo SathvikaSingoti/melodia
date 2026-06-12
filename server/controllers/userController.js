@@ -124,25 +124,6 @@ exports.getHistory = async (req, res) => {
     }
 
     const count = await PlayHistory.countDocuments({ user: userId });
-    
-    // Seed data if little history exists
-    if (count < 100) {
-      const randomSongs = await Song.aggregate([{ $sample: { size: 100 } }]);
-      if (randomSongs.length > 0) {
-        const now = Date.now();
-        const histories = randomSongs.map(song => {
-          // random time in the last 30 days
-          const randomOffset = Math.random() * 30 * 24 * 60 * 60 * 1000;
-          return {
-            user: userId,
-            song: song._id,
-            playedAt: new Date(now - randomOffset),
-            duration: song.duration
-          };
-        });
-        await PlayHistory.insertMany(histories);
-      }
-    }
 
     const history = await PlayHistory.find({ user: userId })
       .sort({ playedAt: -1 })
@@ -163,7 +144,7 @@ exports.addHistory = async (req, res) => {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
-    const { songId, duration } = req.body;
+    const { songId, duration, playedAt } = req.body;
     if (!songId) {
       return res.status(400).json({ message: 'songId is required' });
     }
@@ -171,7 +152,8 @@ exports.addHistory = async (req, res) => {
     const newHistory = await PlayHistory.create({
       user: userId,
       song: songId,
-      duration: duration || 0
+      duration: duration || 0,
+      playedAt: playedAt ? new Date(playedAt) : new Date()
     });
 
     res.json(newHistory);
