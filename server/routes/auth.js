@@ -2,14 +2,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { google } = require('googleapis');
+const passport = require('passport');
 const User = require('../models/User');
-
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  'http://localhost:5000/api/auth/google/callback'
-);
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -108,55 +102,27 @@ router.post('/login', async (req, res) => {
 });
 
 // GET /api/auth/google
-router.get('/google', (req, res) => {
-  const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
-    ],
-  });
-  res.redirect(url);
-});
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 // GET /api/auth/google/callback
-router.get('/google/callback', async (req, res) => {
+router.get('/google/callback', passport.authenticate('google', { session: false, failureRedirect: '/login?error=auth_failed' }), (req, res) => {
+  const token = generateToken(req.user._id);
+  res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
+});
+
+// GET /api/auth/me
+router.get('/me', async (req, res) => {
   try {
-    const { code } = req.query;
-    if (!code) return res.status(400).send('No code provided');
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token provided' });
 
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId).select('-passwordHash -password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const oauth2 = google.oauth2({
-      auth: oauth2Client,
-      version: 'v2',
-    });
-
-    const userInfo = await oauth2.userinfo.get();
-    const { id, email, name } = userInfo.data;
-
-    let user = await User.findOne({ email: email.toLowerCase() });
-
-    if (!user) {
-      user = new User({
-        username: name || email.split('@')[0],
-        email: email.toLowerCase(),
-        googleId: id,
-      });
-      await user.save();
-    } else if (!user.googleId) {
-      user.googleId = id;
-      await user.save();
-    }
-
-    const token = generateToken(user._id);
-
-    // Redirect to frontend with token
-    res.redirect(`http://localhost:3000/login?token=${token}`);
+    res.json(user);
   } catch (error) {
-    console.error('Google Auth Error:', error);
-    res.redirect('http://localhost:3000/login?error=auth_failed');
+    res.status(401).json({ message: 'Invalid token' });
   }
 });
 
