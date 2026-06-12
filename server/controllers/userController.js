@@ -329,14 +329,18 @@ exports.getFollowing = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    const userId = req.user.id;
-    if (userId !== req.params.id) {
-      return res.status(403).json({ message: 'Forbidden' });
+    console.log("DELETE /api/users/:id hit!");
+    const userId = req.user.id || req.user._id;
+    const paramsId = req.params.id;
+    console.log("userId:", userId, "paramsId:", paramsId);
+
+    if (userId.toString() !== paramsId.toString()) {
+      return res.status(403).json({ message: 'Unauthorized' });
     }
 
     // Delete related documents
     await LikedSong.deleteMany({ user: userId });
-    await Playlist.deleteMany({ userId: userId });
+    await Playlist.deleteMany({ userId: userId }); // Note: Playlist schema uses userId
     await PlayHistory.deleteMany({ user: userId });
     
     // Delete user document
