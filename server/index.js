@@ -7,7 +7,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://project-nkv6d.vercel.app',
+    'https://project-q9u65.vercel.app'
+  ],
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -40,10 +47,10 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 // Database connection
 async function startServer() {
   try {
-    let mongoUri = process.env.MONGO_URI;
+    let mongoUri = process.env.MONGO_URI || '';
     
-    // Use memory server if default placeholder is detected
-    if (mongoUri.includes('your_jwt_secret') || mongoUri.includes('mongodb+srv://user:password')) {
+    // Use memory server if default placeholder is detected or MONGO_URI is missing
+    if (!mongoUri || mongoUri.includes('your_jwt_secret') || mongoUri.includes('mongodb+srv://user:password')) {
       console.log('Detected placeholder MongoDB URI. Using mongodb-memory-server for testing...');
       const mongoServer = await MongoMemoryServer.create();
       mongoUri = mongoServer.getUri();
