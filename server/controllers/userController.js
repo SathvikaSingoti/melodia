@@ -93,14 +93,8 @@ exports.updateUser = async (req, res) => {
       const filename = `avatars/${userId}_${Date.now()}.jpg`;
 
       if (getApps().length === 0) {
-        // Local fallback if Firebase is not configured
-        const publicDir = path.join(__dirname, '../public');
-        const avatarsDir = path.join(publicDir, 'avatars');
-        if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir);
-        if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir);
-        
-        fs.writeFileSync(path.join(publicDir, filename), imageBuffer);
-        updateData.avatarUrl = `http://localhost:5000/${filename}`;
+        // Local fallback if Firebase is not configured: save base64 directly to database
+        updateData.avatarUrl = avatarBase64;
       } else {
         // Firebase upload
         const bucket = getStorage().bucket();
@@ -312,7 +306,8 @@ exports.getStats = async (req, res) => {
 
     res.json({
       totalMinutes: Math.round(totalMinutes),
-      songsPlayed: validHistory.length,
+      totalPlays: validHistory.length,
+      uniqueTracks: Object.keys(songMap).length,
       topGenre,
       streak,
       genreBreakdown,
