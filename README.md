@@ -9,7 +9,7 @@
 [![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-blue?style=flat-square&logo=google)](https://deepmind.google/gemini)
 [![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=flat-square&logo=vercel)](https://vercel.com)
 
-**[🚀 Live Demo](https://project-nkv6d.vercel.app)** · **[📋 Notion Docs](https://app.notion.com/p/Melodia-Cloud-Music-Smart-Playlist-Companion-379b4fe8aeae8067a773f56564ea659e?source=copy_link)** · **[🎬 Demo Video](your-video-link)**
+**[🚀 Live Demo](https://project-nkv6d.vercel.app)** · **[📋 Notion Docs](https://app.notion.com/p/Melodia-Cloud-Music-Smart-Playlist-Companion-379b4fe8aeae8067a773f56564ea659e?source=copy_link)** · **[🎬 Demo Video](<video controls src="Melodia media link.mp4" title="Title"></video>)**
 
 ### Melodia Preview 
 <img width="953" height="503" alt="Screenshot 2026-06-15 052445" src="https://github.com/user-attachments/assets/d531f5a4-604a-4126-a42f-e6613a73b747" />
